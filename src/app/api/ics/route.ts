@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   return new NextResponse(icsContent, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="ukg-schedule.ics"',
+      "Content-Disposition": 'attachment; filename="schedule.ics"',
     },
   });
 }

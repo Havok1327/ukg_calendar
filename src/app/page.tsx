@@ -58,7 +58,7 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-5 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            UKG Calendar Sync
+            GearShift
           </h1>
           <p className="mt-1 text-sm sm:text-base text-gray-600">
             Upload your schedule screenshots and export to your calendar
@@ -183,10 +183,10 @@ export default function Home() {
           <div className="px-4 sm:px-6 pb-4 sm:pb-6 text-sm text-gray-600 space-y-3">
             <ol className="list-decimal list-inside space-y-2">
               <li>
-                <strong className="text-gray-700">Take a screenshot</strong> — Open the UKG app, tap <strong>My Schedule</strong>, switch to the <strong>day view</strong>, and take screenshots of your upcoming shifts. You can upload multiple screenshots if your schedule spans several weeks.
+                <strong className="text-gray-700">Take a screenshot</strong> — Open your scheduling app, go to the <strong>day view</strong>, and take screenshots of your upcoming shifts. You can upload multiple screenshots if your schedule spans several weeks.
                 <img
                   src="/example-schedule.jpg"
-                  alt="Example UKG schedule screenshot showing day view with shifts"
+                  alt="Example schedule screenshot showing day view with shifts"
                   className="mt-2 rounded-lg border border-gray-200 max-w-[280px] w-full"
                 />
               </li>

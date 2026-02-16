@@ -14,13 +14,13 @@ const MONTHS: Record<string, string> = {
 const DAY_NAMES = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i;
 
 /**
- * Parse raw OCR text from UKG mobile schedule screenshots.
+ * Parse raw OCR text from mobile schedule screenshots.
  *
- * Actual UKG format (from OCR):
+ * Expected format (from OCR):
  *   February 2026 v          ← month/year header
  *   Fri                      ← day of week
  *   20 4 9:30 AM-5:30 PM [8:00]  ← day number + noise + time range + [duration]
- *   REI/REI/Retail/East/...  ← department/location (title)
+ *   Org/Org/Dept/Region/...  ← department/location (title)
  *   February 22 - 28         ← week header (may change current month)
  *   March O1 - 07            ← week header with new month
  */
@@ -70,7 +70,7 @@ export function parseScheduleText(rawText: string): Shift[] {
       const date = `${currentYear}-${currentMonth}-${day}`;
 
       // Look ahead for title — grab the last segment of the department path
-      // e.g. "REI/REI/Retail/East/Midwest/0073/Hardgoods/Cycling" → "Cycling"
+      // e.g. "Org/Org/Retail/East/Midwest/0073/Hardgoods/Cycling" → "Cycling"
       let title = "";
       for (let j = i + 1; j < lines.length; j++) {
         const nextLine = lines[j];
@@ -85,7 +85,7 @@ export function parseScheduleText(rawText: string): Shift[] {
         }
       }
       // Extract last two segments from the slash-separated path
-      // e.g. "REI/REI/Retail/East/Midwest/0073/Hardgoods/Cycling" → "Hardgoods - Cycling"
+      // e.g. "Org/Org/Retail/East/Midwest/0073/Hardgoods/Cycling" → "Hardgoods - Cycling"
       if (title.includes("/")) {
         const segments = title.split("/").map((s) => s.trim()).filter(Boolean);
         if (segments.length >= 2) {

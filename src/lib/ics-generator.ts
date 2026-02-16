@@ -9,7 +9,7 @@ export function generateIcs(shifts: Shift[]): string {
 
     // Stable UID based on date — re-importing updates existing events
     // instead of creating duplicates
-    const uid = `ukg-shift-${shift.date}@ukg-calendar-sync`;
+    const uid = `shift-${shift.date}@gearshift`;
 
     return {
       uid,
@@ -29,7 +29,7 @@ export function generateIcs(shifts: Shift[]): string {
   return value || "";
 }
 
-export async function downloadIcs(icsContent: string, filename = "ukg-schedule.ics") {
+export async function downloadIcs(icsContent: string, filename = "schedule.ics") {
   const isIos =
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

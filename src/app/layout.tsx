@@ -21,12 +21,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "UKG Calendar Sync",
-  description: "Upload your UKG schedule screenshot and export it to your calendar",
+  title: "GearShift",
+  description: "Upload your schedule screenshot and export it to your calendar",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "UKG Sync",
+    title: "GearShift",
   },
 };
 

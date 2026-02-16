@@ -61,7 +61,7 @@ export default function ShiftTable({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder='e.g. Shift @ REI'
+              placeholder='e.g. Work Shift'
               onChange={(e) => {
                 const val = e.target.value;
                 if (val) {

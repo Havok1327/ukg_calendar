@@ -121,7 +121,7 @@ export default function ImageUpload({
           </svg>
           <p className="text-base sm:text-lg font-medium text-gray-700">
             {files.length === 0
-              ? "Tap to upload your UKG screenshots"
+              ? "Tap to upload your schedule screenshots"
               : "Tap to add more screenshots"}
           </p>
           <p className="text-sm text-gray-500">
