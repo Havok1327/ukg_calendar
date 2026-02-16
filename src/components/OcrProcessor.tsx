@@ -2,40 +2,67 @@
 
 import { useState, useEffect } from "react";
 import { processImage } from "@/lib/ocr";
-import { parseScheduleText } from "@/lib/parser";
+import { parseScheduleText, deduplicateShifts } from "@/lib/parser";
 import { Shift } from "@/types";
 
 interface OcrProcessorProps {
-  imageFile: File;
+  imageFiles: File[];
   onComplete: (shifts: Shift[], rawText: string) => void;
   onError: (error: string) => void;
 }
 
 export default function OcrProcessor({
-  imageFile,
+  imageFiles,
   onComplete,
   onError,
 }: OcrProcessorProps) {
   const [progress, setProgress] = useState(0);
+  const [currentImage, setCurrentImage] = useState(0);
   const [status, setStatus] = useState("Initializing OCR engine...");
+
+  const totalImages = imageFiles.length;
 
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
       try {
-        setStatus("Processing image...");
-        const result = await processImage(imageFile, (p) => {
-          if (!cancelled) setProgress(p);
-        });
+        const allTexts: string[] = [];
+
+        for (let i = 0; i < imageFiles.length; i++) {
+          if (cancelled) return;
+
+          setCurrentImage(i);
+          setStatus(
+            totalImages > 1
+              ? `Processing image ${i + 1} of ${totalImages}...`
+              : "Processing image..."
+          );
+
+          const result = await processImage(imageFiles[i], (p) => {
+            if (!cancelled) {
+              // Scale progress across all images
+              const base = (i / totalImages) * 100;
+              const segment = (1 / totalImages) * 100;
+              setProgress(Math.round(base + (p / 100) * segment));
+            }
+          });
+
+          allTexts.push(result.text);
+        }
 
         if (cancelled) return;
 
         setStatus("Parsing schedule data...");
         setProgress(100);
 
-        const shifts = parseScheduleText(result.text);
-        onComplete(shifts, result.text);
+        const combinedText = allTexts.join("\n");
+        const shifts = deduplicateShifts(parseScheduleText(combinedText));
+        shifts.sort((a, b) => {
+          const cmp = a.date.localeCompare(b.date);
+          return cmp !== 0 ? cmp : a.startTime.localeCompare(b.startTime);
+        });
+        onComplete(shifts, combinedText);
       } catch (e) {
         if (!cancelled) {
           onError((e as Error).message);
@@ -47,7 +74,7 @@ export default function OcrProcessor({
     return () => {
       cancelled = true;
     };
-  }, [imageFile, onComplete, onError]);
+  }, [imageFiles, totalImages, onComplete, onError]);
 
   return (
     <div className="space-y-4">
@@ -61,7 +88,14 @@ export default function OcrProcessor({
           style={{ width: `${progress}%` }}
         />
       </div>
-      <p className="text-sm text-gray-500 text-center">{progress}% complete</p>
+      <p className="text-sm text-gray-500 text-center">
+        {totalImages > 1 && (
+          <span className="block">
+            Image {currentImage + 1} of {totalImages}
+          </span>
+        )}
+        {progress}% complete
+      </p>
     </div>
   );
 }

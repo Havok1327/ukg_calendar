@@ -3,36 +3,50 @@
 import { useCallback, useState, useRef } from "react";
 
 interface ImageUploadProps {
-  onImageSelected: (file: File) => void;
+  onImagesSelected: (files: File[]) => void;
+  existingCount?: number;
 }
 
-export default function ImageUpload({ onImageSelected }: ImageUploadProps) {
-  const [preview, setPreview] = useState<string | null>(null);
+export default function ImageUpload({
+  onImagesSelected,
+  existingCount = 0,
+}: ImageUploadProps) {
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback(
-    (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        alert("Please upload an image file (PNG, JPG, or WEBP)");
+  const addFiles = useCallback(
+    (newFiles: File[]) => {
+      const imageFiles = newFiles.filter((f) => f.type.startsWith("image/"));
+      if (imageFiles.length === 0) {
+        alert("Please upload image files (PNG, JPG, or WEBP)");
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
-      reader.readAsDataURL(file);
-      onImageSelected(file);
+
+      // Generate previews for new files
+      imageFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviews((prev) => [...prev, e.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      const updated = [...files, ...imageFiles];
+      setFiles(updated);
     },
-    [onImageSelected]
+    [files]
   );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      if (droppedFiles.length > 0) addFiles(droppedFiles);
     },
-    [handleFile]
+    [addFiles]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -43,6 +57,32 @@ export default function ImageUpload({ onImageSelected }: ImageUploadProps) {
   const handleDragLeave = useCallback(() => {
     setIsDragging(false);
   }, []);
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(e.target.files || []);
+      if (selected.length > 0) addFiles(selected);
+      // Reset so the same files can be re-selected
+      e.target.value = "";
+    },
+    [addFiles]
+  );
+
+  const removeFile = useCallback(
+    (index: number) => {
+      setFiles((prev) => prev.filter((_, i) => i !== index));
+      setPreviews((prev) => prev.filter((_, i) => i !== index));
+    },
+    []
+  );
+
+  const handleSubmit = useCallback(() => {
+    if (files.length > 0) {
+      onImagesSelected(files);
+    }
+  }, [files, onImagesSelected]);
+
+  const totalCount = existingCount + files.length;
 
   return (
     <div className="space-y-4">
@@ -61,10 +101,8 @@ export default function ImageUpload({ onImageSelected }: ImageUploadProps) {
           ref={fileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/webp"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-          }}
+          multiple
+          onChange={handleInputChange}
           className="hidden"
         />
         <div className="space-y-3">
@@ -82,16 +120,61 @@ export default function ImageUpload({ onImageSelected }: ImageUploadProps) {
             />
           </svg>
           <p className="text-base sm:text-lg font-medium text-gray-700">
-            Tap to upload your UKG screenshot
+            {files.length === 0
+              ? "Tap to upload your UKG screenshots"
+              : "Tap to add more screenshots"}
           </p>
-          <p className="text-sm text-gray-500">PNG, JPG, or WEBP</p>
+          <p className="text-sm text-gray-500">
+            PNG, JPG, or WEBP — select multiple images at once
+          </p>
         </div>
       </div>
 
-      {preview && (
-        <div className="rounded-lg overflow-hidden border border-gray-200">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="Schedule preview" className="w-full" />
+      {/* Thumbnail previews */}
+      {previews.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-700">
+              {totalCount} {totalCount === 1 ? "image" : "images"} selected
+            </p>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {previews.map((src, i) => (
+              <div key={i} className="relative group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={`Screenshot ${existingCount + i + 1}`}
+                  className="w-full aspect-[3/4] object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(i);
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:opacity-100 transition-opacity"
+                  aria-label={`Remove image ${i + 1}`}
+                >
+                  ×
+                </button>
+                <span className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                  {existingCount + i + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSubmit();
+            }}
+            disabled={files.length === 0}
+            className="w-full py-3 sm:py-2 bg-blue-500 text-white rounded-lg active:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          >
+            Process {totalCount} {totalCount === 1 ? "Image" : "Images"}
+          </button>
         </div>
       )}
     </div>

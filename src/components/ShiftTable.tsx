@@ -194,7 +194,7 @@ export default function ShiftTable({
               .then(() => alert("Saved to ocr-output.txt"))
               .catch(() => alert("Failed to save"));
           }}
-          className="mt-2 px-3 py-2 text-xs bg-gray-200 text-gray-700 rounded-lg active:bg-gray-300 min-h-[44px]"
+          className="hidden mt-2 px-3 py-2 text-xs bg-gray-200 text-gray-700 rounded-lg active:bg-gray-300 min-h-[44px]"
         >
           Save raw text to project
         </button>

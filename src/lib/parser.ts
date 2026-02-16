@@ -30,8 +30,6 @@ export function parseScheduleText(rawText: string): Shift[] {
 
   let currentMonth = "";
   let currentYear = "";
-  let pendingDayOfWeek = "";
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
@@ -57,7 +55,6 @@ export function parseScheduleText(rawText: string): Shift[] {
 
     // Match day-of-week line: "Fri", "Sat", etc.
     if (DAY_NAMES.test(line) && line.length <= 10) {
-      pendingDayOfWeek = line;
       continue;
     }
 
@@ -106,12 +103,25 @@ export function parseScheduleText(rawText: string): Shift[] {
         title: title || "Work Shift",
       });
 
-      pendingDayOfWeek = "";
       continue;
     }
   }
 
   return shifts;
+}
+
+/**
+ * Remove duplicate shifts by matching on date + startTime + endTime.
+ * Keeps the first occurrence.
+ */
+export function deduplicateShifts(shifts: Shift[]): Shift[] {
+  const seen = new Set<string>();
+  return shifts.filter((shift) => {
+    const key = `${shift.date}|${shift.startTime}|${shift.endTime}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function normalizeTo24h(timeStr: string): string {
