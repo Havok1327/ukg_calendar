@@ -217,6 +217,11 @@ export default function Home() {
             </ol>
             <div className="pt-2 border-t border-gray-100">
               <p className="text-xs text-gray-500">
+                <strong className="text-gray-600">Note:</strong> If you drop a shift or swap shifts after exporting, you&apos;ll need to manually delete the old event from your calendar.
+              </p>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
                 <strong className="text-gray-600">Tips:</strong> Use clear, zoomed-in screenshots for best OCR results. Safari is recommended on iOS devices.
               </p>
             </div>
