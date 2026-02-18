@@ -176,7 +176,7 @@ export default function Home() {
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm text-amber-800">
-                      You can now delete {imageDataUrls.length === 1 ? "this screenshot" : `these ${imageDataUrls.length} screenshots`} from your Photos app.
+                      Your {imageDataUrls.length === 1 ? "screenshot is" : `${imageDataUrls.length} screenshots are`} no longer needed here. You can delete {imageDataUrls.length === 1 ? "it" : "them"} from your Photos app to free up space.
                     </p>
                     <button
                       onClick={() => setReminderDismissed(true)}
