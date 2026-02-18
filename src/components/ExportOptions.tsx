@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Shift } from "@/types";
 import { generateIcs, downloadIcs } from "@/lib/ics-generator";
 
@@ -21,8 +21,38 @@ function buildGoogleCalendarUrl(shift: Shift): string {
 
 export default function ExportOptions({ shifts }: ExportOptionsProps) {
   const [currentShiftIndex, setCurrentShiftIndex] = useState(-1);
+  const [waitingForReturn, setWaitingForReturn] = useState(false);
 
   const validShifts = shifts.filter((s) => s.date && s.startTime && s.endTime);
+  const indexRef = useRef(currentShiftIndex);
+  indexRef.current = currentShiftIndex;
+
+  const advanceToNext = useCallback(() => {
+    const nextIndex = indexRef.current + 1;
+    if (nextIndex < validShifts.length) {
+      setCurrentShiftIndex(nextIndex);
+      setWaitingForReturn(true);
+      window.open(buildGoogleCalendarUrl(validShifts[nextIndex]), "_blank");
+    } else {
+      setCurrentShiftIndex(validShifts.length);
+      setWaitingForReturn(false);
+    }
+  }, [validShifts]);
+
+  // Auto-advance when user switches back to this tab
+  useEffect(() => {
+    if (!waitingForReturn) return;
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && waitingForReturn) {
+        // Brief delay so the user sees they're back before the next one opens
+        setTimeout(advanceToNext, 800);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [waitingForReturn, advanceToNext]);
 
   const handleDownloadIcs = () => {
     if (validShifts.length === 0) {
@@ -42,19 +72,13 @@ export default function ExportOptions({ shifts }: ExportOptionsProps) {
       alert("No valid shifts to export. Please ensure all shifts have dates and times.");
       return;
     }
-    // Start stepping through shifts
     setCurrentShiftIndex(0);
+    setWaitingForReturn(true);
     window.open(buildGoogleCalendarUrl(validShifts[0]), "_blank");
   };
 
   const handleNextShift = () => {
-    const nextIndex = currentShiftIndex + 1;
-    if (nextIndex < validShifts.length) {
-      setCurrentShiftIndex(nextIndex);
-      window.open(buildGoogleCalendarUrl(validShifts[nextIndex]), "_blank");
-    } else {
-      setCurrentShiftIndex(-1);
-    }
+    advanceToNext();
   };
 
   return (
@@ -111,8 +135,14 @@ export default function ExportOptions({ shifts }: ExportOptionsProps) {
       {/* Step-through UI when adding shifts one at a time */}
       {currentShiftIndex >= 0 && currentShiftIndex < validShifts.length && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-3">
-          <p className="text-sm text-blue-800">
-            Adding shift {currentShiftIndex + 1} of {validShifts.length} — save it in Google Calendar, then come back and tap below.
+          <p className="text-sm font-medium text-blue-800">
+            Shift {currentShiftIndex + 1} of {validShifts.length}
+          </p>
+          <p className="text-sm text-blue-700">
+            Save the event in Google Calendar, then switch back to this tab.{" "}
+            {currentShiftIndex + 1 < validShifts.length
+              ? "The next shift will open automatically."
+              : ""}
           </p>
           <button
             onClick={handleNextShift}
