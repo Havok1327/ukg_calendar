@@ -93,7 +93,7 @@ export default function ExportOptions({ shifts }: ExportOptionsProps) {
               />
             </svg>
           )}
-          {isIos ? "Add to Apple Calendar" : "Download .ics File"}
+          {isIos ? "Add to Calendar" : "Download .ics File"}
         </button>
 
         <button
@@ -150,7 +150,7 @@ export default function ExportOptions({ shifts }: ExportOptionsProps) {
 
       <p className="text-xs text-gray-400 text-center">
         {isIos
-          ? "Apple Calendar adds all shifts at once. Google Calendar opens each shift for you to save."
+          ? "The calendar file adds all shifts at once. Google Calendar opens each shift for you to save."
           : "The .ics file works with Apple Calendar, Outlook, or any calendar app. Google Calendar opens each shift for you to save — no sign-in needed."}
       </p>
     </div>
