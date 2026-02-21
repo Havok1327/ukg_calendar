@@ -73,7 +73,10 @@ export default function OcrProcessor({
         setProgress(100);
 
         const combinedText = allTexts.join("\n");
-        const shifts = deduplicateShifts(parseScheduleText(combinedText));
+        const allShifts = allTexts.flatMap((text, imageIndex) =>
+          parseScheduleText(text).map((s) => ({ ...s, imageIndex }))
+        );
+        const shifts = deduplicateShifts(allShifts);
         shifts.sort((a, b) => {
           const cmp = a.date.localeCompare(b.date);
           return cmp !== 0 ? cmp : a.startTime.localeCompare(b.startTime);

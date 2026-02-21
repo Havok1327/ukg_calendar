@@ -4,6 +4,7 @@ export interface Shift {
   startTime: string; // HH:mm
   endTime: string; // HH:mm
   title: string;
+  imageIndex?: number; // which source screenshot this shift came from
 }
 
 export interface ParsedSchedule {

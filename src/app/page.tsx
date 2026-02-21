@@ -16,6 +16,7 @@ export default function Home() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [reminderDismissed, setReminderDismissed] = useState(false);
   const [bugCopied, setBugCopied] = useState(false);
+  const [selectedScreenshot, setSelectedScreenshot] = useState<number | null>(null);
 
   const handleImagesSelected = useCallback((dataUrls: string[]) => {
     setImageDataUrls(dataUrls);
@@ -158,7 +159,43 @@ export default function Home() {
                 shifts={shifts}
                 onShiftsChange={setShifts}
                 rawText={rawText}
+                imageDataUrls={imageDataUrls}
+                onViewScreenshot={setSelectedScreenshot}
               />
+
+              {selectedScreenshot !== null && (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+                  onClick={() => setSelectedScreenshot(null)}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageDataUrls[selectedScreenshot]}
+                    alt={`Screenshot ${selectedScreenshot + 1}`}
+                    className="max-w-[92vw] max-h-[80vh] rounded-xl object-contain shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    onClick={() => setSelectedScreenshot(null)}
+                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  {imageDataUrls.length > 1 && (
+                    <div className="absolute bottom-6 flex gap-2">
+                      {imageDataUrls.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => { e.stopPropagation(); setSelectedScreenshot(i); }}
+                          className={`w-2 h-2 rounded-full transition-colors ${i === selectedScreenshot ? "bg-white" : "bg-white/40"}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                 <button
                   onClick={handleReset}
@@ -272,7 +309,7 @@ export default function Home() {
                 <strong className="text-gray-700">Upload</strong> — Tap the upload area or drag-and-drop your screenshot images. You can select multiple at once or add more later.
               </li>
               <li>
-                <strong className="text-gray-700">Review</strong> — Check the extracted shifts. Edit dates, times, or titles if needed. Use the bulk title field to rename all shifts at once. Duplicates from overlapping screenshots are automatically removed.
+                <strong className="text-gray-700">Review</strong> — Check the extracted shifts. Edit dates, times, or titles if needed. Use the bulk title field to rename all shifts at once. Duplicates from overlapping screenshots are automatically removed. Tap the <strong>photo icon</strong> on any shift card to view the original screenshot it was pulled from — handy for double-checking times or titles the app may have misread.
               </li>
               <li>
                 <strong className="text-gray-700">Export</strong> — Choose your method:
