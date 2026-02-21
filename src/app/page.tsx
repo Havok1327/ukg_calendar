@@ -15,7 +15,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [reminderDismissed, setReminderDismissed] = useState(false);
-  const [bugCopied, setBugCopied] = useState(false);
+  const [bugReportOpen, setBugReportOpen] = useState(false);
+  const [bugDescription, setBugDescription] = useState("");
+  const [bugSubmitting, setBugSubmitting] = useState(false);
+  const [bugSubmitted, setBugSubmitted] = useState(false);
   const [selectedScreenshot, setSelectedScreenshot] = useState<number | null>(null);
 
   const handleImagesSelected = useCallback((dataUrls: string[]) => {
@@ -49,22 +52,34 @@ export default function Home() {
     setError(null);
     setWarnings([]);
     setReminderDismissed(false);
-    setBugCopied(false);
+    setBugReportOpen(false);
+    setBugDescription("");
+    setBugSubmitted(false);
   };
 
-  const handleReportBug = useCallback(async () => {
+  const handleSubmitBug = useCallback(async () => {
+    if (!bugDescription.trim()) return;
+    setBugSubmitting(true);
     try {
-      await navigator.clipboard.writeText(rawText);
+      await fetch("https://formspree.io/f/meelrayd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          _subject: `GearShift v${process.env.APP_VERSION} Bug Report`,
+          description: bugDescription,
+          ocr_text: rawText,
+          version: process.env.APP_VERSION,
+        }),
+      });
+      setBugSubmitted(true);
+      setBugDescription("");
+      setTimeout(() => { setBugReportOpen(false); setBugSubmitted(false); }, 2500);
     } catch {
-      // clipboard unavailable, continue anyway
+      // silently fail — user can try again
+    } finally {
+      setBugSubmitting(false);
     }
-    const body = encodeURIComponent(
-      `GearShift v${process.env.APP_VERSION} Bug Report\n\nDescribe the issue:\n\n\n\n— OCR text (paste from clipboard) —\n`
-    );
-    window.location.href = `sms:?body=${body}`;
-    setBugCopied(true);
-    setTimeout(() => setBugCopied(false), 4000);
-  }, [rawText]);
+  }, [bugDescription, rawText]);
 
   const steps: { key: WorkflowStep; label: string }[] = [
     { key: "upload", label: "Upload" },
@@ -218,21 +233,65 @@ export default function Home() {
               </div>
               <div className="flex justify-center pt-1">
                 <button
-                  onClick={handleReportBug}
+                  onClick={() => setBugReportOpen(true)}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium bg-red-50 text-red-500 border border-red-200 active:bg-red-100 transition-colors"
                 >
-                  {bugCopied ? (
-                    "OCR text copied — paste it into your message"
-                  ) : (
-                    <>
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                      </svg>
-                      Something look wrong? Report a bug
-                    </>
-                  )}
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  </svg>
+                  Something look wrong? Report a bug
                 </button>
               </div>
+
+              {bugReportOpen && (
+                <div
+                  className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4"
+                  onClick={() => { setBugReportOpen(false); setBugDescription(""); }}
+                >
+                  <div
+                    className="w-full max-w-md bg-white rounded-2xl p-5 space-y-4 shadow-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {bugSubmitted ? (
+                      <div className="text-center py-4 space-y-2">
+                        <p className="text-2xl">✓</p>
+                        <p className="font-medium text-gray-800">Report sent — thanks!</p>
+                        <p className="text-sm text-gray-500">We&apos;ll look into it.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <h2 className="font-semibold text-gray-800">Report a Bug</h2>
+                          <button
+                            onClick={() => { setBugReportOpen(false); setBugDescription(""); }}
+                            className="text-gray-400 active:text-gray-600 p-1 -m-1"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-500">Describe what looks wrong. The OCR text from your screenshots will be included automatically.</p>
+                        <textarea
+                          value={bugDescription}
+                          onChange={(e) => setBugDescription(e.target.value)}
+                          placeholder="e.g. Shift on March 5 shows the wrong time..."
+                          rows={4}
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          autoFocus
+                        />
+                        <button
+                          onClick={handleSubmitBug}
+                          disabled={!bugDescription.trim() || bugSubmitting}
+                          className="w-full py-3 bg-red-500 text-white rounded-xl font-medium active:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {bugSubmitting ? "Sending..." : "Send Report"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
