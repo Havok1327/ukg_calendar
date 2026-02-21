@@ -271,7 +271,7 @@ export default function Home() {
                             </svg>
                           </button>
                         </div>
-                        <p className="text-sm text-gray-500">Describe what looks wrong. The OCR text from your screenshots will be included automatically.</p>
+                        <p className="text-sm text-gray-500">Describe what looks wrong — wrong date, missing shift, bad time, etc. We&apos;ll automatically include your schedule data to help us investigate.</p>
                         <textarea
                           value={bugDescription}
                           onChange={(e) => setBugDescription(e.target.value)}
