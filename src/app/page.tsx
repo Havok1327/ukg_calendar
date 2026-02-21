@@ -159,7 +159,6 @@ export default function Home() {
                 shifts={shifts}
                 onShiftsChange={setShifts}
                 rawText={rawText}
-                imageDataUrls={imageDataUrls}
                 onViewScreenshot={setSelectedScreenshot}
               />
 
@@ -299,6 +298,7 @@ export default function Home() {
             <ol className="list-decimal list-inside space-y-2">
               <li>
                 <strong className="text-gray-700">Take a screenshot</strong> — Open your scheduling app, go to the <strong>day view</strong>, and take screenshots of your upcoming shifts. You can upload multiple screenshots if your schedule spans several weeks. Don&apos;t worry about overlap — duplicate shifts are automatically removed.
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/example-schedule.jpg"
                   alt="Example schedule screenshot showing day view with shifts"

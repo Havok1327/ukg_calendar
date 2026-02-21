@@ -6,7 +6,6 @@ interface ShiftTableProps {
   shifts: Shift[];
   onShiftsChange: (shifts: Shift[]) => void;
   rawText: string;
-  imageDataUrls?: string[];
   onViewScreenshot?: (index: number) => void;
 }
 
@@ -16,7 +15,6 @@ export default function ShiftTable({
   shifts,
   onShiftsChange,
   rawText,
-  imageDataUrls,
   onViewScreenshot,
 }: ShiftTableProps) {
   const updateShift = (id: string, field: keyof Shift, value: string) => {
